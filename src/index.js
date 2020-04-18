@@ -14,8 +14,6 @@ app.use(express.static(publicDirectoryPath));
 
 io.on('connection',(socket) => {
     console.log("New web socket connection")
-    socket.emit('message', generateMessages("Welcome"))
-    socket.broadcast.emit('message',generateMessages("A new user has joined!"))
 
     socket.on('send-message',(message,callback)=>{
         io.emit('message',generateMessages(message))
@@ -27,6 +25,13 @@ io.on('connection',(socket) => {
     socket.on('shareLocation',(data,callback)=>{
         io.emit('location-message',generateLocationMessage(`https://google.com/maps/?q=${data.latitude},${data.longitude}`))
         callback()
+    })
+    socket.on('join',(username, room)=>{
+        socket.join(room)
+        socket.emit('message', generateMessages("Welcome"))
+        socket.to(room).broadcast.emit('message',generateMessages(`${username} has joined!`))
+        // socket.emit, io.emit, socket.broadcast.emit
+        //io.to().emit, socket.to().broadcast.emit
     })
 })
 
