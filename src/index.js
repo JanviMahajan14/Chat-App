@@ -17,15 +17,17 @@ io.on('connection',(socket) => {
     console.log("New web socket connection")
 
     socket.on('send-message',(message,callback)=>{
-        io.emit('message',generateMessages(message))
+        const user = getUsers(socket.id)
+        io.to(user.room).emit('message',generateMessages(user.username, message))
         callback("delieved!")
     })
     socket.on('disconnect',()=>{
         const user = removeUsers(socket.id)
-        io.to(user.room).emit('message',generateMessages(`${user.username} has left!`))
+        io.to(user.room).emit('message',generateMessages(user.username, `${user.username} has left!`))
     })
     socket.on('shareLocation',(data,callback)=>{
-        io.emit('location-message',generateLocationMessage(`https://google.com/maps/?q=${data.latitude},${data.longitude}`))
+        const user = getUsers(socket.id)
+        io.to(user.room).emit('location-message',generateLocationMessage(user.username, `https://google.com/maps/?q=${data.latitude},${data.longitude}`))
         callback()
     })
     socket.on('join',(username, room, callback)=>{
@@ -35,8 +37,8 @@ io.on('connection',(socket) => {
             return callback(user.error)
         }
         callback()
-        socket.emit('message', generateMessages("Welcome"))
-        socket.to(user.room).broadcast.emit('message',generateMessages(`${user.username} has joined!`))
+        socket.emit('message', generateMessages("Admin", "Welcome"))
+        socket.to(user.room).broadcast.emit('message',generateMessages("Admin", `${user.username} has joined!`))
         // socket.emit, io.emit, socket.broadcast.emit
         //io.to().emit, socket.to().broadcast.emit
     })
